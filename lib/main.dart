@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:maps/main_provider.dart';
+import 'package:maps/testing.dart';
 import 'package:provider/provider.dart';
 
 void main() => runApp(Main());
@@ -53,31 +54,62 @@ class MyGoogleMaps extends StatelessWidget{
   MyGoogleMaps(this.data);
 
   final Completer<GoogleMapController> _controller = Completer();
-  final Set<Marker> _marker = {};
+  
 
   @override
-  Widget build(BuildContext context){
-    _marker.add(Marker(
-        markerId: MarkerId(data['latitude'].toString() + data['longitude'].toString()),
-        position: LatLng(data['latitude'], data['longitude']),
-        infoWindow: InfoWindow(
-          title: 'Your current location',
-          snippet: 'This is your location'
-        ),
-        icon: BitmapDescriptor.defaultMarker
-      )
-    );
+  Widget build(BuildContext context){    
+    MainProvider _provider = Provider.of<MainProvider>(context);
+    _provider.addMarker(data);
 
-    return GoogleMap(
-      markers: _marker,
-      onMapCreated: (GoogleMapController controller){
-        _controller.complete(controller);
-      },
-      mapType: MapType.normal,
-      initialCameraPosition: CameraPosition(
-        target: LatLng(data['latitude'], data['longitude']),
-        zoom: 12
-      ),
+    return Stack(
+      children: <Widget>[
+        // MAPS
+        GoogleMap(
+          markers: _provider.marker,
+          onMapCreated: (GoogleMapController controller){
+            _controller.complete(controller);
+          },
+          mapType: MapType.normal,
+          initialCameraPosition: CameraPosition(
+            target: LatLng(data['latitude'], data['longitude']),
+            zoom: 15
+          ),
+        ),
+        // SEARCH
+        Align(
+          alignment: Alignment.topCenter,
+          child: Container(
+            color: Colors.white,
+            margin: EdgeInsets.all(10.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: <Widget>[
+                // TEXT FIELD
+                Expanded(    
+                  flex: 2,              
+                  child: Container(
+                    padding: EdgeInsets.all(5.0),
+                    child: TextField(
+                      onChanged: (text) => _provider.address = text,
+                      decoration: InputDecoration(
+                        labelText: 'Search'
+                      ),
+                    ),
+                  ),
+                ),
+                // BUTTON
+                Flexible(
+                  child: RaisedButton(
+                    onPressed: () => _provider.doSearch(context),
+                    child: Text('Search'),
+                  ),
+                )
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
+
