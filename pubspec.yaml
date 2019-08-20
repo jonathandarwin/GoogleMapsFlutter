@@ -27,8 +27,8 @@ dependencies:
   location: ^1.4.1
   provider: 3.0.0+1
   flutter_google_places: 0.2.3
-  google_maps_webservice: 0.0.14
-  geocoder: 0.2.1
+  google_maps_webservice: 0.0.14  
+  geocoder: 0.2.1  
 
 dev_dependencies:
   flutter_test:

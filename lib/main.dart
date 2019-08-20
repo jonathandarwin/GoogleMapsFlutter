@@ -25,23 +25,30 @@ class RootLayout extends StatelessWidget {
       builder: (_) => MainProvider(),
       child: SafeArea(
         child: Scaffold(
-          body: Consumer<MainProvider>(
-            builder: (context, provider, _) => FutureBuilder(
-              future: provider.getCurrentLocation(),
-              initialData: null,
-              builder: (context, snapshot) {
-                if(snapshot.connectionState == ConnectionState.done){
-                  Map<String, double> data = snapshot.data;
-                  return MyGoogleMaps(data);
-                }
-                return Center(
-                  child: CircularProgressIndicator(),
-                );
-              },
-            ),
-          )
+          body: Body()
         ),
       ),
+    );
+  }
+}
+
+class Body extends StatelessWidget{
+  @override
+  Widget build(BuildContext context){
+    MainProvider _provider = Provider.of<MainProvider>(context, listen: false);
+
+    return FutureBuilder(
+      future: _provider.getCurrentLocation(),
+      initialData: null,
+      builder: (context, snapshot) {
+        if(snapshot.connectionState == ConnectionState.done){
+          Map<String, double> data = snapshot.data;
+          return MyGoogleMaps(data);
+        }
+        return Center(
+          child: CircularProgressIndicator(),
+        );
+      },
     );
   }
 }
