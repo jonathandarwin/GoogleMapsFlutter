@@ -25,9 +25,52 @@ class RootLayout extends StatelessWidget {
       builder: (_) => MainProvider(),
       child: SafeArea(
         child: Scaffold(
-          body: Body()
+          appBar: AppBar(
+            title: Text("Maps"),
+            actions: <Widget>[
+              IconSearch()
+            ],
+          ),
+          body: Body(),
+          floatingActionButton: ButtonAdd(),
         ),
       ),
+    );
+  }
+}
+
+class IconSearch extends StatelessWidget{
+  @override
+  Widget build(BuildContext context){
+    MainProvider _provider = Provider.of<MainProvider>(context, listen:false);
+    return GestureDetector(
+      // onTap: () => _provider.doSearch(context),
+      child: Padding(
+        padding: EdgeInsets.all(10.0),
+        child: Icon(
+          Icons.search,
+          color: Colors.white
+        ),
+      ),
+    );
+  }
+}
+
+class ButtonAdd extends StatelessWidget{
+  @override
+  Widget build(BuildContext context){
+    MainProvider _provider = Provider.of<MainProvider>(context, listen:false);
+
+    return FloatingActionButton(
+      onPressed: () {        
+        Map<String, double> data = {
+          'latitude' : _provider.lastPosition.latitude,
+          'longitude' : _provider.lastPosition.longitude
+        };        
+        _provider.addMarker(data);
+        _provider.getAddress(_provider.lastPosition);
+      },
+      child: Icon(Icons.add),
     );
   }
 }
@@ -38,12 +81,11 @@ class Body extends StatelessWidget{
     MainProvider _provider = Provider.of<MainProvider>(context, listen: false);
 
     return FutureBuilder(
-      future: _provider.getCurrentLocation(),
+      future: _provider.initData(),
       initialData: null,
       builder: (context, snapshot) {
-        if(snapshot.connectionState == ConnectionState.done){
-          Map<String, double> data = snapshot.data;
-          return MyGoogleMaps(data);
+        if(snapshot.connectionState == ConnectionState.done){          
+          return MyGoogleMaps();
         }
         return Center(
           child: CircularProgressIndicator(),
@@ -54,64 +96,34 @@ class Body extends StatelessWidget{
 }
 
 class MyGoogleMaps extends StatelessWidget{
-  final Map<String, double> data;
-  MyGoogleMaps(this.data);
-
   final Completer<GoogleMapController> _controller = Completer();
   
 
   @override
   Widget build(BuildContext context){    
-    MainProvider _provider = Provider.of<MainProvider>(context);
-    _provider.addMarker(data);
+    MainProvider _provider = Provider.of<MainProvider>(context);    
 
     return Stack(
       children: <Widget>[
         // MAPS
         GoogleMap(
           markers: _provider.marker,
+          onCameraMove: _provider.cameraMove,
           onMapCreated: (GoogleMapController controller){
             _controller.complete(controller);
           },
           mapType: MapType.normal,
           initialCameraPosition: CameraPosition(
-            target: LatLng(data['latitude'], data['longitude']),
+            target: _provider.center,
             zoom: 15
           ),
         ),
-        // SEARCH
-        Align(
-          alignment: Alignment.topCenter,
-          child: Container(
-            color: Colors.white,
-            margin: EdgeInsets.all(10.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: <Widget>[
-                // TEXT FIELD
-                Expanded(    
-                  flex: 2,              
-                  child: Container(
-                    padding: EdgeInsets.all(5.0),
-                    child: TextField(
-                      onChanged: (text) => _provider.address = text,
-                      decoration: InputDecoration(
-                        labelText: 'Search'
-                      ),
-                    ),
-                  ),
-                ),
-                // BUTTON
-                Flexible(
-                  child: RaisedButton(
-                    onPressed: () => _provider.doSearch(context),
-                    child: Text('Search'),
-                  ),
-                )
-              ],
-            ),
+        Center(
+          child: Icon(
+            Icons.control_point,
+            size: 50.0,
           ),
-        ),
+        )
       ],
     );
   }
